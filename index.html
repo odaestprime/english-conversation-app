@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI英会話・言語交換支援アプリ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    <div class="max-w-4xl mx-auto p-6">
+        <div class="bg-white rounded-xl shadow-lg p-8">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold text-gray-800 mb-4">AI英会話・言語交換支援アプリ</h1>
+                <p class="text-gray-600">レベル別のフリートーク質問と学習ポイントを生成</p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8">
+                <!-- 入力セクション -->
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">話したいトピック</label>
+                        <input type="text" id="topic" placeholder="例: 映画、料理、旅行、スポーツなど" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">英語レベル</label>
+                        <div class="space-y-2">
+                            <label class="flex items-center">
+                                <input type="radio" name="level" value="beginner" class="mr-3 text-blue-600">
+                                <span class="text-gray-700">初級者</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" name="level" value="intermediate" class="mr-3 text-blue-600">
+                                <span class="text-gray-700">中級者</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" name="level" value="advanced" class="mr-3 text-blue-600">
+                                <span class="text-gray-700">上級者</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <button onclick="generateQuestions()" class="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                        質問を生成
+                    </button>
+                </div>
+
+                <!-- 結果表示セクション -->
+                <div id="results" class="space-y-6" style="display: none;">
+                    <!-- 質問候補 -->
+                    <div class="bg-blue-50 p-6 rounded-lg">
+                        <h3 class="text-lg font-semibold text-blue-800 mb-4">会話質問候補</h3>
+                        <div id="questions" class="space-y-2"></div>
+                    </div>
+
+                    <!-- 学習ポイント -->
+                    <div class="bg-green-50 p-6 rounded-lg">
+                        <h3 class="text-lg font-semibold text-green-800 mb-4">学習ポイント</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <h4 class="font-medium text-green-700 mb-2">重要単語</h4>
+                                <div id="vocabulary" class="flex flex-wrap gap-2"></div>
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-green-700 mb-2">文法ポイント</h4>
+                                <ul id="grammar" class="space-y-1"></ul>
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-green-700 mb-2">便利な表現</h4>
+                                <ul id="expressions" class="space-y-1"></ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const questionTemplates = {
+            beginner: [
+                'Do you like [TOPIC]?',
+                'What is [TOPIC]?',
+                'When do you usually think about [TOPIC]?',
+                'Is [TOPIC] popular in your country?',
+                'How often do you hear about [TOPIC]?',
+                'Do your friends talk about [TOPIC] too?',
+                'What do you know about [TOPIC]?',
+                'Is [TOPIC] easy or difficult to understand?',
+                'Can you tell me about [TOPIC]?',
+                'Why is [TOPIC] interesting to you?'
+            ],
+            intermediate: [
+                'What\'s your opinion about [TOPIC]?',
+                'How has [TOPIC] changed over the years?',
+                'What are the advantages and disadvantages of [TOPIC]?',
+                'If you could improve [TOPIC], what would you change?',
+                'How does [TOPIC] affect people\'s daily lives?',
+                'What\'s the most interesting thing about [TOPIC]?',
+                'Do you think [TOPIC] will be different in the future?',
+                'How does [TOPIC] compare between different countries?',
+                'What challenges do people face with [TOPIC]?',
+                'What advice would you give to someone interested in [TOPIC]?'
+            ],
+            advanced: [
+                'What are the broader implications of [TOPIC] on society?',
+                'How do cultural differences influence perspectives on [TOPIC]?',
+                'What ethical considerations should we think about regarding [TOPIC]?',
+                'How might technological advancement impact [TOPIC]?',
+                'What role does [TOPIC] play in economic development?',
+                'How do you think [TOPIC] will evolve in the next decade?',
+                'What are some misconceptions people have about [TOPIC]?',
+                'How does [TOPIC] intersect with environmental concerns?',
+                'What policy changes would you recommend regarding [TOPIC]?',
+                'How can we balance innovation with tradition in [TOPIC]?'
+            ]
+        };
+
+        const learningTemplates = {
+            beginner: {
+                vocabulary: ['basic', 'simple', 'popular'],
+                grammar: ['Present tense', 'Question formation with "Do/Does"', 'Basic adjectives'],
+                expressions: ['"I think..."', '"In my opinion..."', '"I like/don\'t like..."']
+            },
+            intermediate: {
+                vocabulary: ['advantage', 'disadvantage', 'comparison'],
+                grammar: ['Present perfect tense', 'Conditional sentences', 'Comparative forms'],
+                expressions: ['"On the other hand..."', '"It seems to me that..."', '"From my perspective..."']
+            },
+            advanced: {
+                vocabulary: ['implications', 'perspectives', 'ethical'],
+                grammar: ['Complex conditional sentences', 'Subjunctive mood', 'Advanced passive voice'],
+                expressions: ['"It could be argued that..."', '"One might consider..."', '"This raises the question of..."']
+            }
+        };
+
+        function generateQuestions() {
+            const topic = document.getElementById('topic').value;
+            const level = document.querySelector('input[name="level"]:checked');
+
+            if (!topic || !level) {
+                alert('トピックとレベルを両方選択してください。');
+                return;
+            }
+
+            const selectedLevel = level.value;
+            const questions = questionTemplates[selectedLevel].map(q => q.replace(/\[TOPIC\]/g, topic));
+            const learning = learningTemplates[selectedLevel];
+
+            // 質問表示
+            const questionsDiv = document.getElementById('questions');
+            questionsDiv.innerHTML = '';
+            questions.forEach((question, index) => {
+                const div = document.createElement('div');
+                div.className = 'bg-white p-3 rounded border-l-4 border-blue-400';
+                div.innerHTML = `<span class="text-sm text-blue-600 font-medium">Q${index + 1}: </span><span class="text-gray-800">${question}</span>`;
+                questionsDiv.appendChild(div);
+            });
+
+            // 単語表示
+            const vocabularyDiv = document.getElementById('vocabulary');
+            vocabularyDiv.innerHTML = '';
+            learning.vocabulary.forEach(word => {
+                const span = document.createElement('span');
+                span.className = 'bg-green-200 text-green-800 px-3 py-1 rounded-full text-sm';
+                span.textContent = word;
+                vocabularyDiv.appendChild(span);
+            });
+
+            // 文法表示
+            const grammarUl = document.getElementById('grammar');
+            grammarUl.innerHTML = '';
+            learning.grammar.forEach(point => {
+                const li = document.createElement('li');
+                li.className = 'text-green-800 text-sm';
+                li.textContent = `• ${point}`;
+                grammarUl.appendChild(li);
+            });
+
+            // 表現表示
+            const expressionsUl = document.getElementById('expressions');
+            expressionsUl.innerHTML = '';
+            learning.expressions.forEach(expression => {
+                const li = document.createElement('li');
+                li.className = 'text-green-800 text-sm';
+                li.textContent = `• ${expression}`;
+                expressionsUl.appendChild(li);
+            });
+
+            document.getElementById('results').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
